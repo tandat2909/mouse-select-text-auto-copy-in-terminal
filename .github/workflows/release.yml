@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Kiểm tra tag khớp VERSION trong term-autocopy
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          ver="$(sed -n 's/^VERSION = "\(.*\)"$/\1/p' term-autocopy)"
+          if [ "$tag" != "$ver" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME không khớp VERSION = \"$ver\" trong term-autocopy"
+            exit 1
+          fi
+
+      - name: Kiểm tra code
+        run: |
+          shellcheck install.sh
+          python3 -m py_compile term-autocopy
+
+      - name: Lấy ghi chú phát hành từ CHANGELOG.md
+        run: |
+          awk -v v="${GITHUB_REF_NAME#v}" '
+            /^## \[/ { if (p) exit; if (index($0, "[" v "]")) { p = 1; next } }
+            p
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if ! grep -q '[^[:space:]]' RELEASE_NOTES.md; then
+            echo "::error::CHANGELOG.md chưa có mục cho phiên bản ${GITHUB_REF_NAME#v}"
+            exit 1
+          fi
+
+      - name: Tạo SHA256SUMS
+        run: sha256sum term-autocopy install.sh > SHA256SUMS
+
+      - name: Tạo GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            term-autocopy install.sh SHA256SUMS \
+            --title "term-autocopy $GITHUB_REF_NAME" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag

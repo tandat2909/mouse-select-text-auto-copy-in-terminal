@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""term-autocopy: bôi đen bằng chuột trong terminal -> tự copy vào clipboard (Ctrl+V).
+
+Theo dõi PRIMARY selection (X11); khi cửa sổ đang focus là terminal thì
+đồng bộ nội dung sang CLIPBOARD.
+
+Tuỳ chỉnh danh sách app qua biến môi trường (WM_CLASS, cách nhau bởi dấu phẩy):
+    TERM_AUTOCOPY_CLASSES="gnome-terminal-server,kitty"
+Đặt TERM_AUTOCOPY_CLASSES="*" để áp dụng cho mọi cửa sổ.
+Đặt TERM_AUTOCOPY_NOTIFY=0 để tắt popup thông báo "Đã copy".
+
+    term-autocopy --version   in phiên bản
+"""
+import os
+import subprocess
+import sys
+
+VERSION = "1.0.0"
+
+if "--version" in sys.argv[1:] or "-V" in sys.argv[1:]:
+    print(f"term-autocopy {VERSION}")
+    sys.exit(0)
+
+import gi  # noqa: E402
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+from gi.repository import Gdk, GLib, Gtk  # noqa: E402
+
+
+DEFAULT_CLASSES = (
+    "gnome-terminal-server,gnome-terminal,xfce4-terminal,mate-terminal,"
+    "tilix,terminator,konsole,kitty,alacritty,xterm,urxvt,wezterm,"
+    "org.wezfurlong.wezterm,com.mitchellh.ghostty"
+)
+CLASSES = {
+    c.strip().lower()
+    for c in os.environ.get("TERM_AUTOCOPY_CLASSES", DEFAULT_CLASSES).split(",")
+    if c.strip()
+}
+DEBOUNCE_MS = 150  # chờ người dùng thả chuột / ngừng kéo
+NOTIFY = os.environ.get("TERM_AUTOCOPY_NOTIFY", "1") != "0"
+TOAST_MS = 1000
+
+primary = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
+clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+pending = None
+last_text = None
+toast = None
+toast_label = None
+toast_timer = None
+
+CSS = b"""
+#toast {
+    background-color: transparent;
+}
+#toast-box {
+    background-color: rgba(30, 30, 30, 0.92);
+    border: 1px solid #4caf50;
+    border-radius: 6px;
+}
+#toast-box label {
+    color: #a5d6a7;
+    font-weight: bold;
+    padding: 4px 10px;
+}
+"""
+
+
+def build_toast():
+    global toast, toast_label
+    provider = Gtk.CssProvider()
+    provider.load_from_data(CSS)
+    Gtk.StyleContext.add_provider_for_screen(
+        Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    )
+    toast = Gtk.Window(type=Gtk.WindowType.POPUP)
+    toast.set_name("toast")
+    toast.set_accept_focus(False)
+    toast.set_keep_above(True)
+    visual = toast.get_screen().get_rgba_visual()
+    if visual:
+        toast.set_visual(visual)
+        toast.set_app_paintable(True)
+    box = Gtk.Box()
+    box.set_name("toast-box")
+    toast_label = Gtk.Label()
+    box.add(toast_label)
+    toast.add(box)
+
+
+def hide_toast():
+    global toast_timer
+    toast_timer = None
+    toast.hide()
+    return False
+
+
+def show_toast(text):
+    global toast_timer
+    lines = text.count("\n") + 1
+    spaces = sum(1 for c in text if c.isspace() and c not in "\r\n")
+    info = f"{len(text)} ký tự, {spaces} khoảng trắng" + (f", {lines} dòng" if lines > 1 else "")
+    toast_label.set_text(f"✓ Đã copy ({info})")
+    toast.resize(1, 1)
+    _screen, x, y = Gdk.Display.get_default().get_default_seat().get_pointer().get_position()
+    toast.move(x + 14, y + 18)
+    toast.show_all()
+    if toast_timer:
+        GLib.source_remove(toast_timer)
+    toast_timer = GLib.timeout_add(TOAST_MS, hide_toast)
+
+
+def active_window_classes():
+    try:
+        out = subprocess.run(
+            ["xprop", "-root", "_NET_ACTIVE_WINDOW"],
+            capture_output=True, text=True, timeout=1,
+        ).stdout
+        win_id = out.strip().split()[-1]
+        if win_id in ("0x0", "found."):
+            return set()
+        out = subprocess.run(
+            ["xprop", "-id", win_id, "WM_CLASS"],
+            capture_output=True, text=True, timeout=1,
+        ).stdout
+        # WM_CLASS(STRING) = "gnome-terminal-server", "Gnome-terminal-server"
+        return {p.strip().strip('"').lower() for p in out.split("=", 1)[1].split(",")}
+    except Exception:
+        return set()
+
+
+def on_text(_clip, text):
+    global last_text
+    if not text or text == last_text:
+        return
+    if "*" not in CLASSES and not (active_window_classes() & CLASSES):
+        return
+    last_text = text
+    clipboard.set_text(text, -1)
+    clipboard.store()
+    if NOTIFY:
+        show_toast(text)
+
+
+def flush():
+    global pending
+    pending = None
+    primary.request_text(on_text)
+    return False
+
+
+def on_owner_change(_clip, _event):
+    global pending
+    if pending:
+        GLib.source_remove(pending)
+    pending = GLib.timeout_add(DEBOUNCE_MS, flush)
+
+
+def main():
+    if os.environ.get("XDG_SESSION_TYPE") == "wayland":
+        print("term-autocopy chỉ hỗ trợ X11.", file=sys.stderr)
+        sys.exit(1)
+    if NOTIFY:
+        build_toast()
+    primary.connect("owner-change", on_owner_change)
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, 15, Gtk.main_quit)
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, 2, Gtk.main_quit)
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

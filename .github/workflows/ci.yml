@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck install.sh
+        run: shellcheck install.sh
+
+      - name: Kiểm tra cú pháp Python
+        run: python3 -m py_compile term-autocopy
+
+      - name: Thử cài và gỡ trong HOME tạm
+        run: |
+          export HOME="$(mktemp -d)"
+          DISPLAY= sh install.sh
+          "$HOME/.local/bin/term-autocopy" --version
+          test -f "$HOME/.config/autostart/term-autocopy.desktop"
+          sh install.sh --uninstall
+          test ! -e "$HOME/.local/bin/term-autocopy"
+          test ! -e "$HOME/.config/autostart/term-autocopy.desktop"
