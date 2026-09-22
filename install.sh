@@ -49,19 +49,28 @@ has_deps() {
 }
 
 install_deps() {
+    if [ "$(id -u)" -eq 0 ]; then
+        SUDO=""
+    elif command -v sudo >/dev/null 2>&1; then
+        SUDO="sudo"
+    else
+        die "Thiếu thư viện và không có sudo. Hãy tự cài: python3, PyGObject (GTK 3), xprop."
+    fi
     if command -v apt-get >/dev/null 2>&1; then
-        set -- sudo apt-get install -y python3 python3-gi gir1.2-gtk-3.0 x11-utils
+        info "Cập nhật danh sách gói (apt-get update)..."
+        $SUDO apt-get update -qq || die "apt-get update thất bại."
+        set -- apt-get install -y python3 python3-gi gir1.2-gtk-3.0 x11-utils
     elif command -v dnf >/dev/null 2>&1; then
-        set -- sudo dnf install -y python3 python3-gobject gtk3 xprop
+        set -- dnf install -y python3 python3-gobject gtk3 xprop
     elif command -v pacman >/dev/null 2>&1; then
-        set -- sudo pacman -S --needed --noconfirm python python-gobject gtk3 xorg-xprop
+        set -- pacman -S --needed --noconfirm python python-gobject gtk3 xorg-xprop
     elif command -v zypper >/dev/null 2>&1; then
-        set -- sudo zypper install -y python3 python3-gobject-Gdk typelib-1_0-Gtk-3_0 xprop
+        set -- zypper install -y python3 python3-gobject-Gdk typelib-1_0-Gtk-3_0 xprop
     else
         die "Không nhận ra trình quản lý gói. Hãy tự cài: python3, PyGObject (GTK 3), xprop."
     fi
     info "Cài thư viện còn thiếu: $*"
-    "$@" || die "Cài thư viện thất bại."
+    $SUDO "$@" || die "Cài thư viện thất bại."
 }
 
 sha256_of() {
