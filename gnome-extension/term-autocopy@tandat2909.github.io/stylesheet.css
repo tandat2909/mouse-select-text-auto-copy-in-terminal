@@ -1,0 +1,8 @@
+.term-autocopy-toast {
+    background-color: rgba(30, 30, 30, 0.92);
+    border: 1px solid #4caf50;
+    border-radius: 6px;
+    color: #a5d6a7;
+    font-weight: bold;
+    padding: 4px 10px;
+}

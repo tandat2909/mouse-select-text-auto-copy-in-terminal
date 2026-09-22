@@ -5,6 +5,18 @@ Mọi thay đổi đáng chú ý của dự án được ghi ở đây.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-22
+
+### Thêm mới
+- Hỗ trợ **Ubuntu mặc định (Wayland)** và GNOME trên Wayland nói chung qua GNOME Shell extension `term-autocopy@tandat2909.github.io` (GNOME 45–50: Ubuntu 24.04, 25.10, 26.04 LTS, Fedora, Debian 13…). Cùng hành vi với bản X11: chỉ áp dụng cho terminal, popup "✓ Đã copy", tuỳ chỉnh bằng `TERM_AUTOCOPY_CLASSES`, `TERM_AUTOCOPY_NOTIFY`.
+- `install.sh` tự nhận biết phiên đăng nhập: X11 cài bản Python như cũ; GNOME trên Wayland cài và bật extension (không cần `sudo`); KDE Plasma và wlroots (Sway, Hyprland) trên Wayland được hướng dẫn dùng tính năng có sẵn.
+- Nhận diện thêm terminal: Ptyxis (mặc định Ubuntu 25.10+), GNOME Console, foot, Black Box.
+- Release đính kèm thêm `term-autocopy@tandat2909.github.io.shell-extension.zip`.
+
+### Thay đổi
+- `install.sh` chuẩn bị và kiểm tra bản mới trước khi thay thế, nên cập nhật bị lỗi không làm mất bản đang cài.
+- Badge "lượt cài" đếm theo `install.sh` để tính cả người dùng Wayland.
+
 ## [1.0.1] - 2026-09-22
 
 ### Sửa lỗi
@@ -22,6 +34,7 @@ Mọi thay đổi đáng chú ý của dự án được ghi ở đây.
 - Lệnh `term-autocopy --version`.
 - Trình cài đặt một dòng `install.sh`: tự cài thư viện (apt, dnf, pacman, zypper), kiểm tra SHA256, tự khởi động khi đăng nhập, gỡ bằng `--uninstall`, chọn phiên bản bằng `TERM_AUTOCOPY_VERSION`.
 
-[Unreleased]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/releases/tag/v1.0.0

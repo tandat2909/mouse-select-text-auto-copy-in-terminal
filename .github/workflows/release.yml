@@ -21,6 +21,11 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME không khớp VERSION = \"$ver\" trong term-autocopy"
             exit 1
           fi
+          ext_ver="$(python3 -c "import json; print(json.load(open('gnome-extension/term-autocopy@tandat2909.github.io/metadata.json'))['version-name'])")"
+          if [ "$tag" != "$ext_ver" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME không khớp version-name = \"$ext_ver\" trong metadata.json của extension"
+            exit 1
+          fi
 
       - name: Kiểm tra code
         run: |
@@ -38,8 +43,14 @@ jobs:
             exit 1
           fi
 
+      - name: Đóng gói GNOME Shell extension
+        run: |
+          uuid=term-autocopy@tandat2909.github.io
+          (cd "gnome-extension/$uuid" && zip -qr "$GITHUB_WORKSPACE/$uuid.shell-extension.zip" .)
+          unzip -l "$uuid.shell-extension.zip"
+
       - name: Tạo SHA256SUMS
-        run: sha256sum term-autocopy install.sh > SHA256SUMS
+        run: sha256sum term-autocopy install.sh term-autocopy@tandat2909.github.io.shell-extension.zip > SHA256SUMS
 
       - name: Tạo hoặc cập nhật GitHub Release
         env:
@@ -49,10 +60,11 @@ jobs:
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             # Release đã được tạo tay trên web: cập nhật ghi chú và đính kèm file
             gh release edit "$GITHUB_REF_NAME" --title "$title" --notes-file RELEASE_NOTES.md
-            gh release upload "$GITHUB_REF_NAME" term-autocopy install.sh SHA256SUMS --clobber
+            gh release upload "$GITHUB_REF_NAME" term-autocopy install.sh SHA256SUMS \
+              term-autocopy@tandat2909.github.io.shell-extension.zip --clobber
           else
             gh release create "$GITHUB_REF_NAME" \
-              term-autocopy install.sh SHA256SUMS \
+              term-autocopy install.sh SHA256SUMS term-autocopy@tandat2909.github.io.shell-extension.zip \
               --title "$title" \
               --notes-file RELEASE_NOTES.md \
               --verify-tag

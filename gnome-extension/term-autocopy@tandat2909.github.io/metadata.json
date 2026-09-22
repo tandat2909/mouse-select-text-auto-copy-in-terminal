@@ -1,0 +1,8 @@
+{
+  "uuid": "term-autocopy@tandat2909.github.io",
+  "name": "Terminal Auto Copy",
+  "description": "Bôi đen bằng chuột trong terminal là tự copy vào clipboard (Ctrl+V dán được ngay). Select text in a terminal to copy it to the clipboard automatically.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "url": "https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal",
+  "version-name": "1.1.0"
+}

@@ -20,6 +20,31 @@ jobs:
       - name: Kiểm tra cú pháp Python
         run: python3 -m py_compile term-autocopy
 
+      - name: Kiểm tra GNOME Shell extension
+        run: |
+          dir="gnome-extension/term-autocopy@tandat2909.github.io"
+          python3 -c "import json; m = json.load(open('$dir/metadata.json')); assert m['uuid'] ==  + UUID + ; print(m['shell-version'])"
+          cp "$dir/extension.js" /tmp/extension.mjs
+          node --check /tmp/extension.mjs
+
+      - name: Thử cài và gỡ extension (giả lập Ubuntu Wayland)
+        run: |
+          export HOME="$(mktemp -d)"
+          export XDG_CONFIG_HOME="$HOME/.config" XDG_DATA_HOME="$HOME/.local/share"
+          mkdir -p "$HOME/fakebin"
+          printf '#!/bin/sh\necho "GNOME Shell 50.1"\n' > "$HOME/fakebin/gnome-shell"
+          chmod +x "$HOME/fakebin/gnome-shell"
+          export PATH="$HOME/fakebin:$PATH"
+          ext="$XDG_DATA_HOME/gnome-shell/extensions/term-autocopy@tandat2909.github.io"
+          XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=ubuntu:GNOME sh install.sh
+          test -f "$ext/extension.js"
+          test ! -e "$HOME/.local/bin/term-autocopy"
+          XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=ubuntu:GNOME sh install.sh --uninstall
+          test ! -e "$ext"
+          # GNOME quá cũ phải báo lỗi rõ ràng
+          printf '#!/bin/sh\necho "GNOME Shell 42.9"\n' > "$HOME/fakebin/gnome-shell"
+          if XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=ubuntu:GNOME sh install.sh; then exit 1; fi
+
       - name: Thử cài và gỡ trong HOME tạm
         run: |
           # lỗi thì đưa log vào annotation để xem được ngay trên trang Actions

@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 
 if "--version" in sys.argv[1:] or "-V" in sys.argv[1:]:
     print(f"term-autocopy {VERSION}")
@@ -29,9 +29,10 @@ from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 
 DEFAULT_CLASSES = (
-    "gnome-terminal-server,gnome-terminal,xfce4-terminal,mate-terminal,"
-    "tilix,terminator,konsole,kitty,alacritty,xterm,urxvt,wezterm,"
-    "org.wezfurlong.wezterm,com.mitchellh.ghostty"
+    "gnome-terminal-server,gnome-terminal,org.gnome.terminal,"
+    "org.gnome.ptyxis,ptyxis,org.gnome.console,kgx,xfce4-terminal,mate-terminal,"
+    "tilix,terminator,konsole,kitty,alacritty,foot,footclient,xterm,urxvt,wezterm,"
+    "org.wezfurlong.wezterm,com.mitchellh.ghostty,com.raggesilver.blackbox,blackbox"
 )
 CLASSES = {
     c.strip().lower()
