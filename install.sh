@@ -88,7 +88,9 @@ fetch_asset() {
 
 # Thư mục chứa install.sh khi chạy từ bản clone (rỗng khi chạy qua curl | sh)
 SRC_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd || echo "")"
-[ -n "$SRC_DIR" ] && [ -f "$SRC_DIR/install.sh" ] && [ -f "$SRC_DIR/term-autocopy" ] || SRC_DIR=""
+if [ -z "$SRC_DIR" ] || [ ! -f "$SRC_DIR/install.sh" ] || [ ! -f "$SRC_DIR/term-autocopy" ]; then
+    SRC_DIR=""
+fi
 
 # ---------------------------------------------------------------- GNOME extension
 
@@ -145,7 +147,9 @@ install_gnome_extension() {
         fetch_asset "$EXT_ZIP"
         extract_zip "$TMP_DIR/$EXT_ZIP" "$staged"
     fi
-    [ -f "$staged/metadata.json" ] && [ -f "$staged/extension.js" ] || die "Gói extension không đầy đủ."
+    if [ ! -f "$staged/metadata.json" ] || [ ! -f "$staged/extension.js" ]; then
+        die "Gói extension không đầy đủ."
+    fi
     rm -rf "$EXT_DIR"
     mkdir -p "$(dirname "$EXT_DIR")"
     cp -R "$staged" "$EXT_DIR"
