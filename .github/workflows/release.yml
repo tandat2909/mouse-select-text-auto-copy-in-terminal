@@ -41,12 +41,19 @@ jobs:
       - name: Tạo SHA256SUMS
         run: sha256sum term-autocopy install.sh > SHA256SUMS
 
-      - name: Tạo GitHub Release
+      - name: Tạo hoặc cập nhật GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            term-autocopy install.sh SHA256SUMS \
-            --title "term-autocopy $GITHUB_REF_NAME" \
-            --notes-file RELEASE_NOTES.md \
-            --verify-tag
+          title="term-autocopy $GITHUB_REF_NAME"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            # Release đã được tạo tay trên web: cập nhật ghi chú và đính kèm file
+            gh release edit "$GITHUB_REF_NAME" --title "$title" --notes-file RELEASE_NOTES.md
+            gh release upload "$GITHUB_REF_NAME" term-autocopy install.sh SHA256SUMS --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              term-autocopy install.sh SHA256SUMS \
+              --title "$title" \
+              --notes-file RELEASE_NOTES.md \
+              --verify-tag
+          fi

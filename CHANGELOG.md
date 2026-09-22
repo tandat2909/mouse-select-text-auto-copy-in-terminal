@@ -5,6 +5,13 @@ Mọi thay đổi đáng chú ý của dự án được ghi ở đây.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-22
+
+### Sửa lỗi
+- `install.sh`: chạy `apt-get update` trước khi cài thư viện — trước đây cài thất bại ("Unable to locate package") trên máy mới cài, container hoặc máy lâu chưa cập nhật danh sách gói.
+- `install.sh`: chạy được bằng tài khoản `root` trên hệ thống không có `sudo`.
+- Release v1.0.0 thiếu file đính kèm nên lệnh cài một dòng không tải được; từ v1.0.1 Release được tạo tự động kèm `term-autocopy`, `install.sh`, `SHA256SUMS`.
+
 ## [1.0.0] - 2026-09-22
 
 ### Thêm mới
@@ -15,5 +22,6 @@ Mọi thay đổi đáng chú ý của dự án được ghi ở đây.
 - Lệnh `term-autocopy --version`.
 - Trình cài đặt một dòng `install.sh`: tự cài thư viện (apt, dnf, pacman, zypper), kiểm tra SHA256, tự khởi động khi đăng nhập, gỡ bằng `--uninstall`, chọn phiên bản bằng `TERM_AUTOCOPY_VERSION`.
 
-[Unreleased]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/releases/tag/v1.0.0

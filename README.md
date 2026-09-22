@@ -93,7 +93,7 @@ Script sẽ:
 Cài **một phiên bản cụ thể** (xem danh sách ở trang [Releases](https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/releases)):
 
 ```sh
-curl -fsSL https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/releases/latest/download/install.sh | TERM_AUTOCOPY_VERSION=v1.0.0 sh
+curl -fsSL https://github.com/tandat2909/mouse-select-text-auto-copy-in-terminal/releases/latest/download/install.sh | TERM_AUTOCOPY_VERSION=v1.0.1 sh
 ```
 
 Kiểm tra phiên bản đang cài: `term-autocopy --version`. Chạy lại lệnh cài là **cập nhật** lên bản mới nhất.

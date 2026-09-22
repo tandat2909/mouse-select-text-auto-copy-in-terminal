@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 if "--version" in sys.argv[1:] or "-V" in sys.argv[1:]:
     print(f"term-autocopy {VERSION}")

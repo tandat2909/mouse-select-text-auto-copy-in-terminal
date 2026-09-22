@@ -28,6 +28,7 @@ jobs:
             exit 1
           }
           export HOME="$(mktemp -d)"
+          export XDG_CONFIG_HOME="$HOME/.config"   # runner đặt sẵn biến này trỏ về /home/runner
           DISPLAY= sh -x install.sh > install.log 2>&1 || fail "install.sh lỗi"
           "$HOME/.local/bin/term-autocopy" --version >> install.log 2>&1 || fail "term-autocopy --version lỗi"
           test -f "$HOME/.config/autostart/term-autocopy.desktop" || fail "thiếu file autostart"
