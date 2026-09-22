@@ -23,7 +23,7 @@ jobs:
       - name: Kiểm tra GNOME Shell extension
         run: |
           dir="gnome-extension/term-autocopy@tandat2909.github.io"
-          python3 -c "import json; m = json.load(open('$dir/metadata.json')); assert m['uuid'] ==  + UUID + ; print(m['shell-version'])"
+          python3 -c "import json; m = json.load(open('$dir/metadata.json')); assert m['uuid'] == 'term-autocopy@tandat2909.github.io'; print(m['shell-version'])"
           cp "$dir/extension.js" /tmp/extension.mjs
           node --check /tmp/extension.mjs
 
