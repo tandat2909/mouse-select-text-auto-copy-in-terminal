@@ -22,10 +22,16 @@ jobs:
 
       - name: Thử cài và gỡ trong HOME tạm
         run: |
+          # lỗi thì đưa log vào annotation để xem được ngay trên trang Actions
+          fail() {
+            echo "::error title=$1::$(tail -n 40 install.log | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')"
+            exit 1
+          }
           export HOME="$(mktemp -d)"
-          DISPLAY= sh install.sh
-          "$HOME/.local/bin/term-autocopy" --version
-          test -f "$HOME/.config/autostart/term-autocopy.desktop"
-          sh install.sh --uninstall
-          test ! -e "$HOME/.local/bin/term-autocopy"
-          test ! -e "$HOME/.config/autostart/term-autocopy.desktop"
+          DISPLAY= sh -x install.sh > install.log 2>&1 || fail "install.sh lỗi"
+          "$HOME/.local/bin/term-autocopy" --version >> install.log 2>&1 || fail "term-autocopy --version lỗi"
+          test -f "$HOME/.config/autostart/term-autocopy.desktop" || fail "thiếu file autostart"
+          sh install.sh --uninstall >> install.log 2>&1 || fail "gỡ cài đặt lỗi"
+          test ! -e "$HOME/.local/bin/term-autocopy" || fail "gỡ chưa xoá file chạy"
+          test ! -e "$HOME/.config/autostart/term-autocopy.desktop" || fail "gỡ chưa xoá autostart"
+          cat install.log
